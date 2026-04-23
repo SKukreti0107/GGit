@@ -5,6 +5,7 @@ import json
 import subprocess
 import time
 
+
 class GameEngine:
     def __init__(self, game_instance, rclone_manager):
         self.game = game_instance
@@ -32,6 +33,24 @@ class GameEngine:
         except subprocess.CalledProcessError:
             return False
 
+    def has_local_files(self):
+        save_path = self.game.save_path
+        if not save_path or not save_path.exists() or not save_path.is_dir():
+            return False
+        return any(path.is_file() for path in save_path.rglob("*"))
+
+    def prompt_yes_no(self, prompt_text, default_yes=True):
+        default_hint = "Y/n" if default_yes else "y/N"
+        while True:
+            user_input = input(f"{prompt_text} [{default_hint}]: ").strip().lower()
+            if not user_input:
+                return default_yes
+            if user_input in {"y", "yes"}:
+                return True
+            if user_input in {"n", "no"}:
+                return False
+            print("Please enter 'y' or 'n'.")
+
     def get_manifest_hash(self, path):
         """Builds a stable hash of file listings for local/remote comparison."""
         result = self.run_rclone("lsjson", "-R", "--hash", path, capture_output=True, check=True)
@@ -54,7 +73,24 @@ class GameEngine:
         return hashlib.sha256(manifest.encode("utf-8")).hexdigest()
 
     def push_local_to_remote(self):
-        self.run_rclone("sync", str(self.game.save_path), self.remote_path, "-v", check=True)
+        if not self.has_local_files():
+            print("Warning: Local save folder is missing or empty. Skipping upload to protect remote saves.")
+            return False
+
+        # Use copy instead of sync to avoid deleting remote saves if local files disappear.
+        self.run_rclone("copy", str(self.game.save_path), self.remote_path, "--update", "-v", check=True)
+        return True
+
+    def pull_remote_to_local(self):
+        self.run_rclone(
+            "copy",
+            self.remote_path,
+            str(self.game.save_path),
+            "--update",
+            "--use-server-modtime",
+            "-v",
+            check=True,
+        )
 
     def get_process_ids_by_image(self, image_name):
         """Returns process IDs for a given image name using tasklist (Windows)."""
@@ -125,8 +161,10 @@ class GameEngine:
         if not self.has_remote_files():
             print("First-time setup detected. Pushing current local saves to remote...")
             try:
-                self.push_local_to_remote()
-                print("Initial save backup completed.")
+                if self.push_local_to_remote():
+                    print("Initial save backup completed.")
+                else:
+                    print("Initial save backup skipped to protect existing remote saves.")
             except subprocess.CalledProcessError:
                 print("Failed to create initial cloud backup.")
                 return
@@ -139,18 +177,18 @@ class GameEngine:
                     print("Local and remote saves are identical. Starting game.")
                 else:
                     print("Local and remote saves differ. Pulling latest remote updates before launch...")
-                    self.run_rclone(
-                        "copy",
-                        self.remote_path,
-                        str(self.game.save_path),
-                        "--update",
-                        "--use-server-modtime",
-                        "-v",
-                        check=True,
-                    )
+                    self.pull_remote_to_local()
                     print("Local saves updated from remote.")
             except subprocess.CalledProcessError:
-                print("Warning: Hash comparison failed. Proceeding with existing local saves.")
+                print("Warning: Hash comparison failed.")
+                if self.prompt_yes_no("Fetch saves from remote before launch?", default_yes=True):
+                    try:
+                        self.pull_remote_to_local()
+                        print("Local saves updated from remote.")
+                    except subprocess.CalledProcessError:
+                        print("Failed to fetch saves from remote. Proceeding with existing local saves.")
+                else:
+                    print("Proceeding with existing local saves.")
 
         print(f"Launching {self.game.exe_path}...")
         start_time = time.time()
@@ -175,7 +213,9 @@ class GameEngine:
 
         print("Syncing latest saves to remote...")
         try:
-            self.push_local_to_remote()
-            print(f"Successfully synced saves to {self.rclone.remote_name}.")
+            if self.push_local_to_remote():
+                print(f"Successfully synced saves to {self.rclone.remote_name}.")
+            else:
+                print("Skipped cloud sync to avoid accidental remote data deletion.")
         except subprocess.CalledProcessError:
             print("Failed to sync saves to cloud. Check your connection.")

@@ -50,3 +50,9 @@
 *  **Concurrency:** Using Goroutines will allow cloud pushes to happen seamlessly in the background without freezing the UI.
 *  **Distribution:** Go compiles into a single, tiny `.exe`, making it much easier to share than bulky Python bundles.
 *  **UI:** The final version will likely use **Wails**, allowing for a modern React/Vue frontend with a high-performance Go backend.
+
+### **Local and remote file as same already**
+![Case 1 : Local and remote file as same already](image.png)
+
+### **Case 2 : Local save files missing!!**
+![Case 2 : Local save files missing!!](image-1.png)
