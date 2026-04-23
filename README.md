@@ -18,7 +18,6 @@
 
 *  **Language:** Python 3.12+.
 *  **Backend Engine:** **Rclone**, an open-source tool capable of syncing with over 40 cloud providers, with first-run integrated setup in the CLI.
-* **Resource Usage:** Currently utilizes **700MB - 1GB RAM**.
 *  **Change Detection:** Uses `hashlib` for folder integrity verification.
 
 ---
