@@ -17,7 +17,7 @@
  This project is currently in the **Rapid Prototyping** phase.
 
 *  **Language:** Python 3.12+.
-*  **Backend Engine:** **Rclone**, an open-source tool capable of syncing with over 40 cloud providers.
+*  **Backend Engine:** **Rclone**, an open-source tool capable of syncing with over 40 cloud providers, with first-run integrated setup in the CLI.
 * **Resource Usage:** Currently utilizes **700MB - 1GB RAM**.
 *  **Change Detection:** Uses `hashlib` for folder integrity verification.
 
@@ -30,7 +30,17 @@
 *  **Security:** Offers **Zero-Knowledge Encryption**, ensuring saves are encrypted locally before they leave your PC.
 *  **Speed:** Provides high bandwidth for fast "Push" operations of large binary save blobs.
 
->  **Note:** Users must have a MEGA account and the Rclone executable installed in their system PATH to use the cloud features.
+>  **Note:** Users need a MEGA account,
+
+---
+
+### **Integrated Rclone Setup (Windows)**
+ On first launch, GGit checks for `rclone.exe` in the project and in PATH.
+
+* If Rclone is missing, the CLI prompts to install it automatically.
+* GGit downloads `https://downloads.rclone.org/rclone-current-windows-amd64.zip`.
+* It extracts `rclone.exe` and installs it in the project root.
+* If you skip installation, cloud features remain unavailable until Rclone is installed.
 
 ---
 
