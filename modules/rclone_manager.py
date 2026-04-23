@@ -1,34 +1,85 @@
 import subprocess
 import shutil
+import sys
+import tempfile
+import urllib.request
+import zipfile
 from pathlib import Path
 
+
 class RcloneManager:
+    RCLONE_WINDOWS_AMD64_URL = "https://downloads.rclone.org/rclone-current-windows-amd64.zip"
+
     def __init__(self):
+        self.project_root = Path(__file__).resolve().parents[1]
         self.remote_name = "ggit_mega"
         self.rclone_exe = self.get_rclone_executable_path()
-        self.check_rclone_installed()
+        self.ensure_rclone_installed()
 
     def configure(self):
+        if not self.rclone_exe and not self.ensure_rclone_installed():
+            return False
         return self.setup_mega_remote()
 
     def get_rclone_executable_path(self):
         """Returns the bundled rclone executable path when available."""
-        project_root = Path(__file__).resolve().parents[1]
-        bundled_exe = project_root / "rclone" / "rclone.exe"
-
-        if bundled_exe.exists() and bundled_exe.is_file():
-            return bundled_exe
+        bundled_locations = [
+            self.project_root / "rclone.exe",
+            self.project_root / "rclone" / "rclone.exe",
+        ]
+        for bundled_exe in bundled_locations:
+            if bundled_exe.exists() and bundled_exe.is_file():
+                return bundled_exe
 
         return shutil.which("rclone")
 
-    def check_rclone_installed(self):
-        """Checks if bundled or system Rclone is available."""
+    def ensure_rclone_installed(self):
+        """Ensures rclone is available, optionally bootstrapping a local install."""
         if self.rclone_exe:
             print(f"Rclone detected at: {self.rclone_exe}")
             return True
-        else:
-            print("Error: Rclone not found.")
-            print("Please place rclone.exe in the project rclone folder or add Rclone to your PATH: https://rclone.org/downloads/")
+
+        print("Rclone not found.")
+
+        if not sys.stdin.isatty():
+            print("Skipping auto-install because stdin is not interactive.")
+            print("Install Rclone from https://rclone.org/downloads/ or place rclone.exe in the project root.")
+            return False
+
+        choice = input("Install rclone now in the project root? [Y/n]: ").strip().lower()
+        if choice in ("", "y", "yes"):
+            if self.download_and_install_rclone():
+                self.rclone_exe = self.get_rclone_executable_path()
+                if self.rclone_exe:
+                    print(f"Rclone installed at: {self.rclone_exe}")
+                    return True
+
+        print("Install skipped. Rclone commands will be unavailable until rclone is installed.")
+        return False
+
+    def download_and_install_rclone(self):
+        """Downloads rclone zip and installs rclone.exe into the project root."""
+        target_exe = self.project_root / "rclone.exe"
+        print("Downloading rclone...")
+
+        try:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                temp_root = Path(tmp_dir)
+                zip_path = temp_root / "rclone-windows-amd64.zip"
+                urllib.request.urlretrieve(self.RCLONE_WINDOWS_AMD64_URL, zip_path)
+
+                with zipfile.ZipFile(zip_path) as archive:
+                    archive.extractall(temp_root)
+
+                extracted_binaries = list(temp_root.rglob("rclone.exe"))
+                if not extracted_binaries:
+                    print("Downloaded archive did not contain rclone.exe.")
+                    return False
+
+                shutil.copy2(extracted_binaries[0], target_exe)
+                return True
+        except (urllib.error.URLError, zipfile.BadZipFile, OSError) as error:
+            print(f"Failed to install rclone automatically: {error}")
             return False
 
     def run_rclone(self, *args, capture_output=False, text=True, check=False):
