@@ -1,0 +1,10 @@
+{
+  "game": {
+    "name": "RDR2",
+    "exe_path": "E:\\Games\\Red Dead Redemption 2\\RDR2.exe",
+    "save_path": "C:\\Users\\Shubh\\AppData\\Roaming\\Goldberg SocialClub Emu Saves\\RDR2"
+  },
+  "rclone": {
+    "remote_name": "ggit_mega"
+  }
+}
