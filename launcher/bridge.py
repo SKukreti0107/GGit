@@ -52,6 +52,11 @@ class GGitBridgeApi:
         game.exe_path = Path(exe_path) if exe_path else None
         game.save_path = Path(save_path) if save_path else None
         return game
+
+    def _get_window(self):
+        if not webview.windows:
+            return None
+        return webview.windows[0]
     
     # api methods callable form JS
 
@@ -179,6 +184,50 @@ class GGitBridgeApi:
             library.append(self._build_library_item(game, status))
         self._append_log("INFO", "status", "Status refresh complete.")
         return library
+
+    def pick_game_exe(self):
+        window = self._get_window()
+        if not window:
+            self._append_log("ERROR", "library", "File picker unavailable: no active window.")
+            return ""
+
+        file_dialog = getattr(webview, "FileDialog", None)
+        open_dialog = file_dialog.OPEN if file_dialog else webview.OPEN_DIALOG
+
+        try:
+            selected = window.create_file_dialog(
+                open_dialog,
+                allow_multiple=False,
+                file_types=("Executable files (*.exe)", "All files (*.*)"),
+            )
+            if selected:
+                selected_path = str(selected[0])
+                self._append_log("INFO", "library", f"Selected EXE: {selected_path}")
+                return selected_path
+        except Exception as exc:
+            self._append_log("ERROR", "library", f"Failed to open EXE picker: {exc}")
+
+        return ""
+
+    def pick_save_folder(self):
+        window = self._get_window()
+        if not window:
+            self._append_log("ERROR", "library", "Folder picker unavailable: no active window.")
+            return ""
+
+        file_dialog = getattr(webview, "FileDialog", None)
+        folder_dialog = file_dialog.FOLDER if file_dialog else webview.FOLDER_DIALOG
+
+        try:
+            selected = window.create_file_dialog(folder_dialog)
+            if selected:
+                selected_path = str(selected[0])
+                self._append_log("INFO", "library", f"Selected save folder: {selected_path}")
+                return selected_path
+        except Exception as exc:
+            self._append_log("ERROR", "library", f"Failed to open save-folder picker: {exc}")
+
+        return ""
     
 
     def launch_game(self,game_name):
@@ -205,17 +254,54 @@ class GGitBridgeApi:
         }
     
     def add_game(self, name, exe_path, save_path):
-        new_game = Game()
-        new_game.name = name
-        new_game.exe_path = Path(exe_path)
-        new_game.save_path = Path(save_path)
+        name = (name or "").strip()
+        exe_path = (exe_path or "").strip()
+        save_path = (save_path or "").strip()
 
-        self.games.append(new_game)
-        save_config(self.games, name, self.rclone_manager)
-        self._append_log("INFO", "library", f"Added game: {name}")
-        return{
-            "status":"Success",
-            "message":f"{name} added to Library."
+        if not exe_path or not save_path:
+            self._append_log("ERROR", "library", "add_game rejected: exe_path and save_path are required.")
+            return {
+                "status": "error",
+                "message": "Game EXE path and save folder path are required.",
+            }
+
+        exe_candidate = Path(exe_path)
+        save_candidate = Path(save_path)
+        if not exe_candidate.exists() or not exe_candidate.is_file():
+            self._append_log("ERROR", "library", f"add_game rejected: EXE does not exist ({exe_path}).")
+            return {
+                "status": "error",
+                "message": "Game EXE path is invalid or does not exist.",
+            }
+
+        if not save_candidate.exists() or not save_candidate.is_dir():
+            self._append_log("ERROR", "library", f"add_game rejected: save folder does not exist ({save_path}).")
+            return {
+                "status": "error",
+                "message": "Save folder path is invalid or does not exist.",
+            }
+
+        new_game = Game()
+        new_game.exe_path = exe_candidate
+        new_game.save_path = save_candidate
+        new_game.name = name or new_game.exe_path.stem
+
+        existing_game = next((g for g in self.games if g.name.lower() == new_game.name.lower()), None)
+        if existing_game:
+            existing_game.exe_path = new_game.exe_path
+            existing_game.save_path = new_game.save_path
+            active_name = existing_game.name
+            action_text = "Updated"
+        else:
+            self.games.append(new_game)
+            active_name = new_game.name
+            action_text = "Added"
+
+        save_config(self.games, active_name, self.rclone_manager)
+        self._append_log("INFO", "library", f"{action_text} game: {active_name}")
+        return {
+            "status": "success",
+            "message": f"{active_name} {action_text.lower()} in library.",
         }
     
     

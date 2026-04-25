@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import GameCard from "./GameCard"
-export default function CardGrid() {
+export default function CardGrid({ refreshKey = 0 }) {
 
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -8,6 +8,8 @@ export default function CardGrid() {
 
     useEffect(() => {
         let isMounted = true;
+        setLoading(true);
+        setError("");
 
         const getLibrary = async () => {
             try {
@@ -60,7 +62,7 @@ export default function CardGrid() {
             isMounted = false;
             window.removeEventListener("pywebviewready", onPywebviewReady);
         };
-    }, []);
+    }, [refreshKey]);
 
 
 
