@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import GameCard from "./GameCard"
-export default function CardGrid({ refreshKey = 0 }) {
+export default function CardGrid({ refreshKey = 0, onOpenGame }) {
 
     const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -80,7 +80,7 @@ export default function CardGrid({ refreshKey = 0 }) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
             {games.map((g)=>(
-                <GameCard key={g.name} name={g.name} status={g.status || "Unknown"}></GameCard>
+                <GameCard game={g} key={g.name} onOpen={onOpenGame}></GameCard>
             ))}
             
         </div>

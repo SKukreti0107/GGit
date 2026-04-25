@@ -1,40 +1,44 @@
 <!DOCTYPE html>
 
-<html className="dark" lang="en">
+<html class="dark" lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>GGit - Dashboard</title>
+    <title>GGit - Game Detail View</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Space+Grotesk:wght@600;700&amp;display=swap"
         rel="stylesheet" />
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
-            darkMode: "className",
+            darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         "primary": "#f04f33",
                         "background-light": "#f8f6f6",
                         "background-dark": "#090D14",
-                        "surface": "rgba(20, 26, 37, 0.73)",
-                        "surface-border": "#1E293B",
-                        "text-main": "#E2E8F0",
-                        "muted": "#64748B",
-                        "success": "#10B981",
-                        "warning": "#F59E0B"
                     },
                     fontFamily: {
                         "display": ["Space Grotesk", "sans-serif"],
-                        "body": ["Inter", "sans-serif"],
-                        "mono": ["JetBrains Mono", "monospace"]
+                        "sans": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
                     },
-                    borderRadius: { "DEFAULT": "0.125rem", "sm": "0.25rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
                     boxShadow: {
                         'glow-primary': '0 0 30px rgba(240, 79, 51, 0.15)',
                     }
@@ -45,179 +49,182 @@
     <style>
         body {
             background-color: theme('colors.background-dark');
-            color: theme('colors.text-main');
-            font-family: theme('fontFamily.body');
+            color: theme('colors.slate.200');
         }
 
-        .glass-header {
-            background-color: theme('colors.surface');
+        .glass-panel {
+            background-color: rgba(20, 26, 37, 0.73);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border-bottom: 1px solid theme('colors.surface-border');
-        }
-
-        .game-card {
-            background-color: theme('colors.surface');
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid theme('colors.surface-border');
-            transition: all 0.2s ease-in-out;
-        }
-
-        .game-card:hover {
-            border-color: theme('colors.primary');
-            box-shadow: theme('boxShadow.glow-primary');
-            transform: translateY(-2px);
-        }
-
-        .terminal-dock {
-            background-color: #000000;
-            border-top: 1px solid theme('colors.surface-border');
-        }
-
-        .sync-progress {
-            background: linear-gradient(90deg, transparent, theme('colors.primary'), transparent);
-            background-size: 200% 100%;
-            animation: progressLine 1.5s infinite linear;
-        }
-
-        @keyframes progressLine {
-            0% {
-                background-position: 100% 0;
-            }
-
-            100% {
-                background-position: -100% 0;
-            }
+            border: 1px solid theme('colors.slate.800');
         }
     </style>
 </head>
 
-<body className="min-h-screen flex flex-col overflow-x-hidden">
-    <!-- Shared TopNavBar Inclusion based on logic (Dashboard is a destination screen) -->
-    <div classNameName="relative flex h-auto min-h-screen w-full flex-col bg-[#181211] dark group/design-root overflow-x-hidden"
-        style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
-        <div className="layout-container flex h-full grow flex-col pb-12"> <!-- pb-12 for terminal dock -->
-            <div className="px-4 md:px-10 flex flex-1 justify-center py-5">
-                <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1">
-                    <!-- Global Header -->
-                    <header
-                        className="glass-header sticky top-0 z-50 flex items-center justify-between whitespace-nowrap px-6 py-4 rounded-sm mb-8">
-                        <div className="flex items-center gap-4 text-white">
-                            <div className="size-6 text-primary">
-                                <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
-                                </svg>
-                            </div>
-                            <h2 className="font-display text-white text-xl font-bold leading-tight tracking-[-0.015em]">GGit
-                            </h2>
-                        </div>
-                        <button
-                            className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-sm h-10 px-6 bg-primary hover:bg-[#d44329] transition-colors text-white text-sm font-bold font-display leading-normal tracking-[0.015em] uppercase shadow-[0_0_15px_rgba(240,79,51,0.3)]">
-                            <span className="material-symbols-outlined mr-2 text-[18px]">sync</span>
-                            <span className="truncate">Sync All</span>
-                        </button>
-                    </header>
-                    <!-- Main Grid -->
-                    <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
-                        <!-- Card 1: Synced -->
-                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
-                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
-                                data-alt="neon lit futuristic cyberpunk city street scene with wet pavement at night"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBplIVzU7CWPvhCveIxnpD6oiMjkEVwezjipveWiU9gSNvjcZs_yYyfj-DBXYes-XORT5aUykozCgONVJ0qbOARYqO93vuvViIhmOBM8gcAHB4L-qEle6WglDWFqa7GxLskNL01d4IjTz7JynGQDYPsRj8vJIFUlVNBGAr4nMUkoWbCqhUA59wySkA89QvCjGVmEedZFri5vLUcZ4WvAKL36kM49CamKEJPGZCxgO6if2gnLfhNCiXUmyzzyAYrz4v1QmC7iRLoZz8");'>
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
-                                </div>
-                            </div>
-                            <div className="p-4 flex flex-col gap-3">
-                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Cyberpunk
-                                    2077</h3>
-                                <div className="flex items-center justify-between mt-auto">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-success"></div>
-                                        <span className="font-mono text-muted text-xs">Synced</span>
-                                    </div>
-                                    <span className="font-mono text-muted text-xs">a1b2c3d</span>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 2: Local Newer -->
-                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
-                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
-                                data-alt="dark atmospheric fantasy landscape with glowing magical elements and ancient ruins"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB6XV9dM0RU2GZ75FLelvhSYm6fiDwdjNAoBqmdfBbN9bJgf9Eoa5Vwc4vOgqTUhAN0UL2bD5Ned213ccMTaz6RtHnCabqg3HIomIvDus8XFSxXhyLWV8QR-uz96Ec7PAUy0KW0mKL-e-FDEYeKAyGoKndHwuYURURESObTqf8UBzmBbMS62cDyA-xvsMo32sEnue5mmmKeTyu-1IA_QVBUDFSlo63eegNV3AKdjWdc41uVA75HDjUhFmdxuDVR6ddKEs1PXmAODEc");'>
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
-                                </div>
-                            </div>
-                            <div className="p-4 flex flex-col gap-3">
-                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Elden Ring
-                                </h3>
-                                <div className="flex items-center justify-between mt-auto">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
-                                        <span className="font-mono text-warning text-xs">Local Newer</span>
-                                    </div>
-                                    <span className="font-mono text-muted text-xs">f8e9d0c</span>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Card 3: Syncing -->
-                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
-                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
-                                data-alt="minimalist sci-fi space station interior with glowing red accents"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTTCQEYASpRJgeVJHHOrg5bXORi6pIH9iJkp4o6sNRI3lBAdS62d19OJdfcGToVoRJgpSbsPWKKT78zblgOzlaLsMOSA-HItFC4Lp3k18brK98YhUpF3A7Xb6yF6fGUiB-QqDJ9Ja2398luzpskP4N0JMO7Qg8f6nrXG-vkLiJ52SpEU3_YAlLeaxPAtV1VPr5ILAIeMOOD79K00Vkfm6I_ISZePKMEdTsXXduZPLtsK3-kCZg6dDNvcYcQid9Me0pl4eubeNJ8DM");'>
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
-                                </div>
-                            </div>
-                            <div className="p-4 flex flex-col gap-3">
-                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Starfield
-                                </h3>
-                                <div className="flex items-center justify-between mt-auto">
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className="material-symbols-outlined text-primary text-[14px] animate-spin">sync</span>
-                                        <span className="font-mono text-primary text-xs">Syncing...</span>
-                                    </div>
-                                    <span className="font-mono text-muted text-xs">pushing obj...</span>
-                                </div>
-                            </div>
-                            <div className="absolute bottom-0 left-0 w-full h-[2px] sync-progress"></div>
-                        </div>
-                        <!-- Card 4: Synced -->
-                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
-                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
-                                data-alt="abstract tech background with glowing orange circuit lines on dark slate"
-                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCDrKO8tqkXyFPuA7ehMJrGblGxWVnrFeLC9ZlCxbAKzoF76LVoiJB3Z_1pFxG_nANb5_69YlyASGP4RLhgxYurba4jjomjHVwEivhyyFIOGEZBmT2eqh76sMwHl6d0x-bp5z4bI57WH7L9cFbr_oj77dHfhdsYkR8q6rBfF9bxHtJnLmTMfs6ni5Jka0ktWI6styjQVwhfxx_tjfDWRbcCUDsbV0pzQHbD7v5KYnnRhLZsgy4Z9-IDpqF3_TMLFULEQsJHPJCrA0A");'>
-                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
-                                </div>
-                            </div>
-                            <div className="p-4 flex flex-col gap-3">
-                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Hades II
-                                </h3>
-                                <div className="flex items-center justify-between mt-auto">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-success"></div>
-                                        <span className="font-mono text-muted text-xs">Synced</span>
-                                    </div>
-                                    <span className="font-mono text-muted text-xs">3b4c5d6</span>
-                                </div>
-                            </div>
-                        </div>
-                    </main>
-                </div>
-            </div>
+<body class="min-h-screen flex flex-col font-sans relative overflow-x-hidden">
+    <!-- Blurred Hero Background -->
+    <div class="fixed inset-0 z-0 pointer-events-none">
+        <div class="absolute inset-0 bg-cover bg-center opacity-40 blur-[25px]"
+            data-alt="vibrant neon lit futuristic cyberpunk city street scene at night with glowing pink and blue lights"
+            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDRfs2TAlV1wGPux6LiK-drCGmdfE0IU9cpRZXOitg1TTLntleYLBkHMjrTrM7Ox4n2jtBkBZxJVSKNOTX0_Egjc6ghQ0KE8ShOcqyGjC4c2l21jG7jTzdKX7Dm66JjTfEZV1VFc2W917Wix_YkT8LXUAM--Npe_8vvIqvGBcwC6yuOV6ggQtYfu9DmDaHr4RFcRR-qtDae-o3zc2-nDwSqgr0jjlluhVlisKXZfjAC6-2r9R3fhuO2r0RoT-LwWSuMabPvqpQ1haY');">
+        </div>
+        <div
+            class="absolute inset-0 bg-gradient-to-b from-background-dark/50 via-background-dark/80 to-background-dark">
         </div>
     </div>
-    <!-- Docked Terminal Log -->
+    <!-- Minimal Back Header -->
+    <header class="relative z-10 w-full p-6 flex items-center justify-between">
+        <button class="flex items-center gap-2 text-slate-300 hover:text-white transition-colors group">
+            <span
+                class="material-symbols-outlined text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+            <span class="font-display font-semibold text-sm uppercase tracking-wider">Back to Library</span>
+        </button>
+    </header>
+    <!-- Main Content Area -->
+    <main class="relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 pb-24 flex flex-col md:flex-row gap-8 items-start">
+        <!-- Left Column: Metadata & Launch (30%) -->
+        <aside class="w-full md:w-[30%] flex flex-col gap-6 shrink-0">
+            <div class="glass-panel rounded-lg p-6 flex flex-col gap-6 shadow-2xl">
+                <!-- Game Cover Art Masked -->
+                <div class="w-full aspect-[3/4] rounded bg-slate-900 overflow-hidden relative border border-slate-800">
+                    <img alt="Game Cover" class="object-cover w-full h-full"
+                        data-alt="vibrant neon lit futuristic cyberpunk city street scene at night with glowing pink and blue lights"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfcEbcBTYzv4W-WHTNckq-s9YJ8R1b8LYsZlmRrXIfDDoXd46bkw9pWv6SejpPH6TNMfcCmUG-F0Xjhw01JB9SyT5foOg0kupVI9ztsd20JI16zBHeRQD7s6_xOvA7G-dZw8OaY2m-aQukyl4AVzIV1KwQDkWzFCfICyta4UwrWkNU3M_62SPhynabiJ51vbEv7I_jWq4FPbZx4KH2opNHpvTaXgUClw2Hp-_MIFNrrbUWbendKsVP4qHt4GN7gZ4XU17VDBVm_lM" />
+                </div>
+                <div class="flex flex-col gap-2">
+                    <h1 class="text-3xl font-display font-bold text-white tracking-tight">Cyberpunk 2077</h1>
+                    <div class="flex items-center gap-2 text-sm text-slate-400">
+                        <span class="material-symbols-outlined text-sm">schedule</span>
+                        <span>Last Played: 2 hours ago</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm mt-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="font-mono text-emerald-500">Synced</span>
+                    </div>
+                </div>
+                <!-- Massive Launch CTA -->
+                <button
+                    class="w-full h-[56px] bg-primary hover:bg-[#d9442a] text-white rounded-lg font-display font-bold uppercase tracking-[0.05em] transition-all shadow-glow-primary flex items-center justify-center gap-2 mt-2">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                    Launch Game
+                </button>
+            </div>
+        </aside>
+        <!-- Right Column: Git History (70%) -->
+        <section class="w-full md:w-[70%] flex flex-col gap-6">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                <h2 class="text-xl font-display font-bold text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400">history</span>
+                    Save History
+                </h2>
+                <div class="flex gap-3">
+                    <button
+                        class="px-4 py-2 text-sm font-display font-semibold border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">cloud_download</span>
+                        Pull Cloud
+                    </button>
+                </div>
+            </div>
+            <!-- Unstaged Saves Warning (Pinned) -->
+            <div
+                class="glass-panel rounded-lg p-5 border border-primary/50 shadow-[0_0_15px_rgba(240,79,51,0.1)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-[pulse_4s_ease-in-out_infinite]">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded bg-primary/20 flex items-center justify-center shrink-0 border border-primary/30">
+                        <span class="material-symbols-outlined text-primary">warning</span>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-bold text-primary mb-1">Unstaged Local Saves</h3>
+                        <p class="text-sm text-slate-400">New save data detected locally that has not been pushed to the
+                            cloud.</p>
+                    </div>
+                </div>
+                <button
+                    class="px-5 py-2.5 bg-primary text-white text-sm font-display font-bold rounded-lg uppercase tracking-wider hover:bg-[#d9442a] transition-colors shrink-0 whitespace-nowrap">
+                    Push Changes
+                </button>
+            </div>
+            <!-- Timeline -->
+            <div class="relative pl-6 mt-4">
+                <!-- Vertical Track -->
+                <div class="absolute left-2.5 top-2 bottom-0 w-[2px] bg-slate-800"></div>
+                <!-- Snapshot Item 1 -->
+                <div
+                    class="relative flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-lg hover:bg-slate-800/50 transition-colors group">
+                    <!-- Commit Dot -->
+                    <div
+                        class="absolute -left-[22px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-400 border-[3px] border-background-dark group-hover:bg-primary transition-colors">
+                    </div>
+                    <div class="flex flex-col gap-1 mb-2 sm:mb-0">
+                        <span class="font-medium text-slate-200">Auto-save after clearing warehouse</span>
+                        <span class="font-mono text-xs text-slate-500">Today, 14:32</span>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span
+                            class="font-mono text-xs text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">+12kb</span>
+                        <span class="font-mono text-sm text-slate-500">e8f4a2c</span>
+                        <button
+                            class="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-slate-400 hover:text-white rounded hover:bg-slate-700 flex items-center justify-center"
+                            title="Restore this state">
+                            <span class="material-symbols-outlined text-lg">restore</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Snapshot Item 2 -->
+                <div
+                    class="relative flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-lg hover:bg-slate-800/50 transition-colors group">
+                    <div
+                        class="absolute -left-[22px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-700 border-[3px] border-background-dark group-hover:bg-slate-400 transition-colors">
+                    </div>
+                    <div class="flex flex-col gap-1 mb-2 sm:mb-0">
+                        <span class="font-medium text-slate-200">Manual Save - Act 2 Start</span>
+                        <span class="font-mono text-xs text-slate-500">Yesterday, 22:15</span>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span
+                            class="font-mono text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">0kb</span>
+                        <span class="font-mono text-sm text-slate-500">b3a19fd</span>
+                        <button
+                            class="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-slate-400 hover:text-white rounded hover:bg-slate-700 flex items-center justify-center"
+                            title="Restore this state">
+                            <span class="material-symbols-outlined text-lg">restore</span>
+                        </button>
+                    </div>
+                </div>
+                <!-- Snapshot Item 3 -->
+                <div
+                    class="relative flex flex-col sm:flex-row sm:items-center justify-between p-4 mb-3 rounded-lg hover:bg-slate-800/50 transition-colors group">
+                    <div
+                        class="absolute -left-[22px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-slate-700 border-[3px] border-background-dark group-hover:bg-slate-400 transition-colors">
+                    </div>
+                    <div class="flex flex-col gap-1 mb-2 sm:mb-0">
+                        <span class="font-medium text-slate-200">Quick Save</span>
+                        <span class="font-mono text-xs text-slate-500">Yesterday, 19:40</span>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span
+                            class="font-mono text-xs text-red-400 bg-red-400/10 px-2 py-0.5 rounded border border-red-400/20">-4kb</span>
+                        <span class="font-mono text-sm text-slate-500">7c2e01a</span>
+                        <button
+                            class="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-slate-400 hover:text-white rounded hover:bg-slate-700 flex items-center justify-center"
+                            title="Restore this state">
+                            <span class="material-symbols-outlined text-lg">restore</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Global Terminal Log (Docked Bottom) -->
     <div
-        className="terminal-dock fixed bottom-0 left-0 w-full h-12 flex items-center px-4 justify-between z-50 cursor-pointer hover:bg-[#0a0a0a] transition-colors">
-        <div className="flex items-center gap-3 overflow-hidden">
-            <span className="material-symbols-outlined text-muted text-[16px]">terminal</span>
-            <span className="font-mono text-muted text-xs truncate whitespace-nowrap">
-                <span className="text-success">[rclone]</span> INFO : Local save newer. Initiating push for "Elden Ring"...
-            </span>
+        class="fixed bottom-0 left-0 right-0 h-12 bg-black border-t border-slate-800 z-50 flex items-center justify-between px-4 cursor-pointer hover:bg-[#0a0a0a] transition-colors">
+        <div class="flex items-center gap-3 w-full overflow-hidden">
+            <span class="material-symbols-outlined text-slate-500 text-sm">terminal</span>
+            <span class="font-mono text-xs text-slate-400 truncate">rclone sync /local/saves mega:/games/saves
+                --transfers=4 --progress [Idle]</span>
         </div>
-        <button className="text-muted hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-[20px]">expand_less</span>
+        <button class="text-slate-500 hover:text-slate-300 p-1">
+            <span class="material-symbols-outlined text-xl">expand_less</span>
         </button>
     </div>
 </body>
