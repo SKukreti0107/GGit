@@ -7,10 +7,16 @@ import time
 
 
 class GameEngine:
-    def __init__(self, game_instance, rclone_manager):
+    def __init__(self, game_instance, rclone_manager, logger=None):
         self.game = game_instance
         self.rclone = rclone_manager
         self.remote_path = f"{self.rclone.remote_name}:GGit/Saves/{self.game.name}"
+        self.logger = logger
+
+    def _emit(self, message, level="INFO"):
+        print(message)
+        if callable(self.logger):
+            self.logger(level, "engine", message)
 
     def run_rclone(self, *args, check=False, capture_output=False, text=True):
         if not self.rclone.rclone_exe:
@@ -49,7 +55,7 @@ class GameEngine:
                 return True
             if user_input in {"n", "no"}:
                 return False
-            print("Please enter 'y' or 'n'.")
+            self._emit("Please enter 'y' or 'n'.", "WARN")
 
     def get_manifest_hash(self, path):
         """Builds a stable hash of file listings for local/remote comparison."""
@@ -74,7 +80,7 @@ class GameEngine:
 
     def push_local_to_remote(self):
         if not self.has_local_files():
-            print("Warning: Local save folder is missing or empty. Skipping upload to protect remote saves.")
+            self._emit("Warning: Local save folder is missing or empty. Skipping upload to protect remote saves.", "WARN")
             return False
 
         # Use copy instead of sync to avoid deleting remote saves if local files disappear.
@@ -148,49 +154,49 @@ class GameEngine:
         return launcher_process.poll() or 0
 
     def start(self):
-        print(f"\n--- GGit Engine: Starting {self.game.name} ---")
+        self._emit(f"\n--- GGit Engine: Starting {self.game.name} ---")
 
-        print("Preparing cloud save folder...")
+        self._emit("Preparing cloud save folder...")
 
         try:
             self.run_rclone("mkdir", self.remote_path, check=True, capture_output=True)
         except subprocess.CalledProcessError:
-            print("Warning: Could not ensure cloud save folder exists. Proceeding with local saves.")
+            self._emit("Warning: Could not ensure cloud save folder exists. Proceeding with local saves.", "WARN")
             return
 
         if not self.has_remote_files():
-            print("First-time setup detected. Pushing current local saves to remote...")
+            self._emit("First-time setup detected. Pushing current local saves to remote...")
             try:
                 if self.push_local_to_remote():
-                    print("Initial save backup completed.")
+                    self._emit("Initial save backup completed.")
                 else:
-                    print("Initial save backup skipped to protect existing remote saves.")
+                    self._emit("Initial save backup skipped to protect existing remote saves.", "WARN")
             except subprocess.CalledProcessError:
-                print("Failed to create initial cloud backup.")
+                self._emit("Failed to create initial cloud backup.", "ERROR")
                 return
         else:
-            print("Comparing local and remote save hashes...")
+            self._emit("Comparing local and remote save hashes...")
             try:
                 local_hash = self.get_manifest_hash(str(self.game.save_path))
                 remote_hash = self.get_manifest_hash(self.remote_path)
                 if local_hash == remote_hash:
-                    print("Local and remote saves are identical. Starting game.")
+                    self._emit("Local and remote saves are identical. Starting game.")
                 else:
-                    print("Local and remote saves differ. Pulling latest remote updates before launch...")
+                    self._emit("Local and remote saves differ. Pulling latest remote updates before launch...")
                     self.pull_remote_to_local()
-                    print("Local saves updated from remote.")
+                    self._emit("Local saves updated from remote.")
             except subprocess.CalledProcessError:
-                print("Warning: Hash comparison failed.")
+                self._emit("Warning: Hash comparison failed.", "WARN")
                 if self.prompt_yes_no("Fetch saves from remote before launch?", default_yes=True):
                     try:
                         self.pull_remote_to_local()
-                        print("Local saves updated from remote.")
+                        self._emit("Local saves updated from remote.")
                     except subprocess.CalledProcessError:
-                        print("Failed to fetch saves from remote. Proceeding with existing local saves.")
+                        self._emit("Failed to fetch saves from remote. Proceeding with existing local saves.", "WARN")
                 else:
-                    print("Proceeding with existing local saves.")
+                    self._emit("Proceeding with existing local saves.", "WARN")
 
-        print(f"Launching {self.game.exe_path}...")
+        self._emit(f"Launching {self.game.exe_path}...")
         start_time = time.time()
         game_image_name = self.game.exe_path.name
         baseline_pids = self.get_process_ids_by_image(game_image_name)
@@ -198,24 +204,24 @@ class GameEngine:
         try:
             process = subprocess.Popen([str(self.game.exe_path)])
         except OSError:
-            print("Failed to launch game executable.")
+            self._emit("Failed to launch game executable.", "ERROR")
             return
 
-        print("Game is running.....")
+        self._emit("Game is running.....")
         return_code = self.wait_for_game_process(process, game_image_name, baseline_pids)
 
         end_time = time.time()
         duration_seconds = int(end_time - start_time)
         minutes, seconds = divmod(duration_seconds, 60)
-        print(f"Game closed. Session duration: {minutes}m {seconds}s.")
+        self._emit(f"Game closed. Session duration: {minutes}m {seconds}s.")
         if return_code != 0:
-            print(f"Warning: Game process exited with code {return_code}.")
+            self._emit(f"Warning: Game process exited with code {return_code}.", "WARN")
 
-        print("Syncing latest saves to remote...")
+        self._emit("Syncing latest saves to remote...")
         try:
             if self.push_local_to_remote():
-                print(f"Successfully synced saves to {self.rclone.remote_name}.")
+                self._emit(f"Successfully synced saves to {self.rclone.remote_name}.")
             else:
-                print("Skipped cloud sync to avoid accidental remote data deletion.")
+                self._emit("Skipped cloud sync to avoid accidental remote data deletion.", "WARN")
         except subprocess.CalledProcessError:
-            print("Failed to sync saves to cloud. Check your connection.")
+            self._emit("Failed to sync saves to cloud. Check your connection.", "ERROR")

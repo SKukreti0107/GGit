@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html className="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>GGit - Dashboard</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "className",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f04f33",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#090D14",
+                        "surface": "rgba(20, 26, 37, 0.73)",
+                        "surface-border": "#1E293B",
+                        "text-main": "#E2E8F0",
+                        "muted": "#64748B",
+                        "success": "#10B981",
+                        "warning": "#F59E0B"
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "sm": "0.25rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                    boxShadow: {
+                        'glow-primary': '0 0 30px rgba(240, 79, 51, 0.15)',
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: theme('colors.background-dark');
+            color: theme('colors.text-main');
+            font-family: theme('fontFamily.body');
+        }
+
+        .glass-header {
+            background-color: theme('colors.surface');
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid theme('colors.surface-border');
+        }
+
+        .game-card {
+            background-color: theme('colors.surface');
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid theme('colors.surface-border');
+            transition: all 0.2s ease-in-out;
+        }
+
+        .game-card:hover {
+            border-color: theme('colors.primary');
+            box-shadow: theme('boxShadow.glow-primary');
+            transform: translateY(-2px);
+        }
+
+        .terminal-dock {
+            background-color: #000000;
+            border-top: 1px solid theme('colors.surface-border');
+        }
+
+        .sync-progress {
+            background: linear-gradient(90deg, transparent, theme('colors.primary'), transparent);
+            background-size: 200% 100%;
+            animation: progressLine 1.5s infinite linear;
+        }
+
+        @keyframes progressLine {
+            0% {
+                background-position: 100% 0;
+            }
+
+            100% {
+                background-position: -100% 0;
+            }
+        }
+    </style>
+</head>
+
+<body className="min-h-screen flex flex-col overflow-x-hidden">
+    <!-- Shared TopNavBar Inclusion based on logic (Dashboard is a destination screen) -->
+    <div classNameName="relative flex h-auto min-h-screen w-full flex-col bg-[#181211] dark group/design-root overflow-x-hidden"
+        style='font-family: "Space Grotesk", "Noto Sans", sans-serif;'>
+        <div className="layout-container flex h-full grow flex-col pb-12"> <!-- pb-12 for terminal dock -->
+            <div className="px-4 md:px-10 flex flex-1 justify-center py-5">
+                <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1">
+                    <!-- Global Header -->
+                    <header
+                        className="glass-header sticky top-0 z-50 flex items-center justify-between whitespace-nowrap px-6 py-4 rounded-sm mb-8">
+                        <div className="flex items-center gap-4 text-white">
+                            <div className="size-6 text-primary">
+                                <svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M6 6H42L36 24L42 42H6L12 24L6 6Z" fill="currentColor"></path>
+                                </svg>
+                            </div>
+                            <h2 className="font-display text-white text-xl font-bold leading-tight tracking-[-0.015em]">GGit
+                            </h2>
+                        </div>
+                        <button
+                            className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-sm h-10 px-6 bg-primary hover:bg-[#d44329] transition-colors text-white text-sm font-bold font-display leading-normal tracking-[0.015em] uppercase shadow-[0_0_15px_rgba(240,79,51,0.3)]">
+                            <span className="material-symbols-outlined mr-2 text-[18px]">sync</span>
+                            <span className="truncate">Sync All</span>
+                        </button>
+                    </header>
+                    <!-- Main Grid -->
+                    <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
+                        <!-- Card 1: Synced -->
+                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
+                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
+                                data-alt="neon lit futuristic cyberpunk city street scene with wet pavement at night"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBplIVzU7CWPvhCveIxnpD6oiMjkEVwezjipveWiU9gSNvjcZs_yYyfj-DBXYes-XORT5aUykozCgONVJ0qbOARYqO93vuvViIhmOBM8gcAHB4L-qEle6WglDWFqa7GxLskNL01d4IjTz7JynGQDYPsRj8vJIFUlVNBGAr4nMUkoWbCqhUA59wySkA89QvCjGVmEedZFri5vLUcZ4WvAKL36kM49CamKEJPGZCxgO6if2gnLfhNCiXUmyzzyAYrz4v1QmC7iRLoZz8");'>
+                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
+                                </div>
+                            </div>
+                            <div className="p-4 flex flex-col gap-3">
+                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Cyberpunk
+                                    2077</h3>
+                                <div className="flex items-center justify-between mt-auto">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-success"></div>
+                                        <span className="font-mono text-muted text-xs">Synced</span>
+                                    </div>
+                                    <span className="font-mono text-muted text-xs">a1b2c3d</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 2: Local Newer -->
+                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
+                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
+                                data-alt="dark atmospheric fantasy landscape with glowing magical elements and ancient ruins"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB6XV9dM0RU2GZ75FLelvhSYm6fiDwdjNAoBqmdfBbN9bJgf9Eoa5Vwc4vOgqTUhAN0UL2bD5Ned213ccMTaz6RtHnCabqg3HIomIvDus8XFSxXhyLWV8QR-uz96Ec7PAUy0KW0mKL-e-FDEYeKAyGoKndHwuYURURESObTqf8UBzmBbMS62cDyA-xvsMo32sEnue5mmmKeTyu-1IA_QVBUDFSlo63eegNV3AKdjWdc41uVA75HDjUhFmdxuDVR6ddKEs1PXmAODEc");'>
+                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
+                                </div>
+                            </div>
+                            <div className="p-4 flex flex-col gap-3">
+                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Elden Ring
+                                </h3>
+                                <div className="flex items-center justify-between mt-auto">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-warning animate-pulse"></div>
+                                        <span className="font-mono text-warning text-xs">Local Newer</span>
+                                    </div>
+                                    <span className="font-mono text-muted text-xs">f8e9d0c</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Card 3: Syncing -->
+                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
+                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
+                                data-alt="minimalist sci-fi space station interior with glowing red accents"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCTTCQEYASpRJgeVJHHOrg5bXORi6pIH9iJkp4o6sNRI3lBAdS62d19OJdfcGToVoRJgpSbsPWKKT78zblgOzlaLsMOSA-HItFC4Lp3k18brK98YhUpF3A7Xb6yF6fGUiB-QqDJ9Ja2398luzpskP4N0JMO7Qg8f6nrXG-vkLiJ52SpEU3_YAlLeaxPAtV1VPr5ILAIeMOOD79K00Vkfm6I_ISZePKMEdTsXXduZPLtsK3-kCZg6dDNvcYcQid9Me0pl4eubeNJ8DM");'>
+                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
+                                </div>
+                            </div>
+                            <div className="p-4 flex flex-col gap-3">
+                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Starfield
+                                </h3>
+                                <div className="flex items-center justify-between mt-auto">
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="material-symbols-outlined text-primary text-[14px] animate-spin">sync</span>
+                                        <span className="font-mono text-primary text-xs">Syncing...</span>
+                                    </div>
+                                    <span className="font-mono text-muted text-xs">pushing obj...</span>
+                                </div>
+                            </div>
+                            <div className="absolute bottom-0 left-0 w-full h-[2px] sync-progress"></div>
+                        </div>
+                        <!-- Card 4: Synced -->
+                        <div className="game-card flex flex-col rounded-sm overflow-hidden cursor-pointer relative group">
+                            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
+                                data-alt="abstract tech background with glowing orange circuit lines on dark slate"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCDrKO8tqkXyFPuA7ehMJrGblGxWVnrFeLC9ZlCxbAKzoF76LVoiJB3Z_1pFxG_nANb5_69YlyASGP4RLhgxYurba4jjomjHVwEivhyyFIOGEZBmT2eqh76sMwHl6d0x-bp5z4bI57WH7L9cFbr_oj77dHfhdsYkR8q6rBfF9bxHtJnLmTMfs6ni5Jka0ktWI6styjQVwhfxx_tjfDWRbcCUDsbV0pzQHbD7v5KYnnRhLZsgy4Z9-IDpqF3_TMLFULEQsJHPJCrA0A");'>
+                                <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent">
+                                </div>
+                            </div>
+                            <div className="p-4 flex flex-col gap-3">
+                                <h3 className="font-display text-white text-lg font-bold leading-tight truncate">Hades II
+                                </h3>
+                                <div className="flex items-center justify-between mt-auto">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-success"></div>
+                                        <span className="font-mono text-muted text-xs">Synced</span>
+                                    </div>
+                                    <span className="font-mono text-muted text-xs">3b4c5d6</span>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Docked Terminal Log -->
+    <div
+        className="terminal-dock fixed bottom-0 left-0 w-full h-12 flex items-center px-4 justify-between z-50 cursor-pointer hover:bg-[#0a0a0a] transition-colors">
+        <div className="flex items-center gap-3 overflow-hidden">
+            <span className="material-symbols-outlined text-muted text-[16px]">terminal</span>
+            <span className="font-mono text-muted text-xs truncate whitespace-nowrap">
+                <span className="text-success">[rclone]</span> INFO : Local save newer. Initiating push for "Elden Ring"...
+            </span>
+        </div>
+        <button className="text-muted hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-[20px]">expand_less</span>
+        </button>
+    </div>
+</body>
+
+</html>
