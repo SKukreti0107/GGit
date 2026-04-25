@@ -70,8 +70,17 @@ The installer automatically handles WebView2 checks, shortcut creation, and bund
 
 ---
 
+### **OLD TERMINAL CLI**
+
 ### **Local and remote file as same already**
-![Case 1 : Local and remote file as same already](image.png)
+![Case 1 : Local and remote file as same already](images/image.png)
 
 ### **Case 2 : Local save files missing!!**
-![Case 2 : Local save files missing!!](image-1.png)
+![Case 2 : Local save files missing!!](images/image-1.png)
+
+
+### **NEW LAUNCHER UI**
+
+![alt text](images/image-3.png)
+
+![alt text](images/image-2.png)
