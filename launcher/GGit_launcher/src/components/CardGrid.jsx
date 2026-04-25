@@ -3,14 +3,24 @@ import GameCard from "./GameCard"
 export default function CardGrid({ refreshKey = 0, onOpenGame }) {
 
     const [games, setGames] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [isCheckingStatuses, setIsCheckingStatuses] = useState(false);
     const [error, setError] = useState("");
 
     useEffect(() => {
         let isMounted = true;
-        setLoading(true);
         setError("");
         const forceRefresh = refreshKey > 0;
+
+        const markChecking = (library) => {
+            if (!Array.isArray(library)) {
+                return [];
+            }
+
+            return library.map((entry) => ({
+                ...entry,
+                status: "Checking...",
+            }));
+        };
 
         const getLibrary = async () => {
             try {
@@ -22,9 +32,18 @@ export default function CardGrid({ refreshKey = 0, onOpenGame }) {
                     return;
                 }
 
-                const res = typeof api.get_library_with_status === "function"
-                    ? await api.get_library_with_status(forceRefresh)
-                    : await api.get_library();
+                setIsCheckingStatuses(true);
+
+                const baseLibrary = await api.get_library();
+                if (isMounted) {
+                    setGames(markChecking(baseLibrary));
+                }
+
+                if (typeof api.get_library_with_status !== "function") {
+                    return;
+                }
+
+                const res = await api.get_library_with_status(forceRefresh);
                 if (isMounted) {
                     setGames(Array.isArray(res) ? res : []);
                 }
@@ -35,7 +54,7 @@ export default function CardGrid({ refreshKey = 0, onOpenGame }) {
                 }
             }
             finally {
-                if (isMounted) setLoading(false);
+                if (isMounted) setIsCheckingStatuses(false);
             }
         }
 
@@ -51,7 +70,6 @@ export default function CardGrid({ refreshKey = 0, onOpenGame }) {
             // In plain browser dev mode, pywebview will never be injected.
             setTimeout(() => {
                 if (isMounted && typeof window.pywebview?.api?.get_library !== "function") {
-                    setLoading(false);
                     setError("pywebview API unavailable in browser mode.");
                 }
             }, 1200);
@@ -63,25 +81,27 @@ export default function CardGrid({ refreshKey = 0, onOpenGame }) {
         };
     }, [refreshKey]);
 
-
-
-
-    if (loading) {
-        return <div className="px-2">Loading library...</div>;
-    }
-
     if (error) {
         return <div className="px-2 text-warning">{error}</div>;
+    }
+
+    if (!games.length) {
+        return <div className="px-2 text-muted">No games in library yet.</div>;
     }
 
 
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
+        <div className="space-y-3">
+            {isCheckingStatuses && (
+                <div className="px-2 font-mono text-xs text-muted">Checking game status...</div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-2">
             {games.map((g)=>(
                 <GameCard game={g} key={g.name} onOpen={onOpenGame}></GameCard>
             ))}
-            
+            </div>
         </div>
     )
 }
