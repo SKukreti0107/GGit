@@ -1,8 +1,8 @@
 import Form from "../components/LoginPage/Form"
 import NavBar from "../components/LoginPage/NavBar"
-export default function MegaDeetsLogin() {
+export default function MegaDeetsLogin({ onLoginSuccess }) {
     return (
-        <body
+        <div
             className="bg-background-dark text-white min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
             <div
                 className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px] pointer-events-none">
@@ -27,10 +27,10 @@ export default function MegaDeetsLogin() {
                             GGit uses Rclone to establish an encrypted tunnel to your MEGA storage.
                         </p>
                     </div>
-                    <Form></Form>
+                    <Form onLoginSuccess={onLoginSuccess}></Form>
                 </div>
 
             </main>
-        </body>
+        </div>
     )
 } 
