@@ -4,7 +4,7 @@ import CardGrid from "../components/CardGrid"
 import NavBar from "../components/NavBar"
 import Terminal from "../components/Terminal"
 
-export default function Home({ onOpenGame }) {
+export default function Home({ onOpenGame, onOpenAccount }) {
     const [refreshKey, setRefreshKey] = useState(0);
     const [isAddingGame, setIsAddingGame] = useState(false);
     const [isAddGameOpen, setIsAddGameOpen] = useState(false);
@@ -60,7 +60,7 @@ export default function Home({ onOpenGame }) {
                 <div className="layout-container flex h-full grow flex-col pb-12">
                     <div className="px-4 md:px-10 flex flex-1 justify-center py-5">
                         <div className="layout-content-container flex flex-col w-full max-w-[1200px] flex-1">
-                            <NavBar addDisabled={isAddingGame} onAddGame={openAddGame} onRefresh={refreshLibrary}></NavBar>
+                            <NavBar addDisabled={isAddingGame} onAddGame={openAddGame} onRefresh={refreshLibrary} onAccountClick={onOpenAccount}></NavBar>
                             <CardGrid onOpenGame={onOpenGame} refreshKey={refreshKey}></CardGrid>
                         </div>
                     </div>

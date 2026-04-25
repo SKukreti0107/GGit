@@ -1,4 +1,4 @@
-export default function NavBar({ onRefresh, onAddGame, addDisabled = false }) {
+export default function NavBar({ onRefresh, onAddGame, onAccountClick, addDisabled = false }) {
     return (
         <div className="glass-header sticky top-0 z-50 flex items-center justify-between whitespace-nowrap px-6 py-4 rounded-sm mb-8">
             <div className="flex items-center gap-4 text-white">
@@ -28,6 +28,15 @@ export default function NavBar({ onRefresh, onAddGame, addDisabled = false }) {
                 >
                     <span className="material-symbols-outlined mr-2 text-[18px]">add_circle</span>
                     <span className="truncate">Add Game</span>
+                </button>
+
+                <button
+                    className="flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-surface hover:bg-white/10 transition-colors border border-surface-border text-white shadow-sm ml-2"
+                    onClick={onAccountClick}
+                    type="button"
+                    title="Account Settings"
+                >
+                    <span className="material-symbols-outlined text-[20px]">person</span>
                 </button>
             </div>
 

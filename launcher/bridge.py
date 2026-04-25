@@ -372,3 +372,23 @@ class GGitBridgeApi:
         except Exception as exc:
             self._append_log("ERROR", "mega", f"Failed to create MEGA remote: {exc}")
             return {"status": "error", "message": "Failed to connect to MEGA. Please check your credentials."}
+
+    def logout_mega(self):
+        self._append_log("INFO", "mega", "Logging out of MEGA remote...")
+        if not self.rclone_manager.rclone_exe:
+            return {"status": "error", "message": "Rclone executable not found."}
+        
+        try:
+            self.rclone_manager.run_rclone(
+                "config",
+                "delete",
+                self.rclone_manager.remote_name,
+                check=True,
+            )
+            # Remove remote name from config if needed, or leave it as ggit_mega
+            self._invalidate_status_cache("mega remote deleted")
+            self._append_log("INFO", "mega", f"Successfully deleted MEGA remote '{self.rclone_manager.remote_name}'")
+            return {"status": "success", "message": "MEGA logged out successfully."}
+        except Exception as exc:
+            self._append_log("ERROR", "mega", f"Failed to delete MEGA remote: {exc}")
+            return {"status": "error", "message": "Failed to logout from MEGA."}
