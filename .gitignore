@@ -13,3 +13,5 @@ rclone.exe
 .env
 ggit_config.json
 assets
+
+GGit_Launcher.spec
