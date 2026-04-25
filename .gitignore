@@ -10,3 +10,6 @@ wheels/
 .venv
 
 rclone.exe
+.env
+ggit_config.json
+assets

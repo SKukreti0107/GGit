@@ -19,6 +19,7 @@ def _normalize_game_entry(entry):
         "name": entry.get("name", ""),
         "exe_path": entry.get("exe_path", ""),
         "save_path": entry.get("save_path", ""),
+        "thumbnail_path": entry.get("thumbnail_path", ""),
     }
 
 
@@ -54,6 +55,7 @@ def save_config(games, active_game_name, rclone_manager):
                 "name": game.name,
                 "exe_path": str(game.exe_path) if game.exe_path else "",
                 "save_path": str(game.save_path) if game.save_path else "",
+                "thumbnail_path": game.thumbnail_path,
             }
             for game in games
         ],
@@ -63,3 +65,4 @@ def save_config(games, active_game_name, rclone_manager):
         },
     }
     CONFIG_PATH.write_text(json.dumps(config, indent=2), encoding="utf-8")
+

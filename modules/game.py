@@ -5,6 +5,7 @@ class Game:
         self.name = ""
         self.exe_path = None
         self.save_path = None
+        self.thumbnail_path = ""
 
     def configure(self):
         if self.add_game_exe_path():

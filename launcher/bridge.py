@@ -1,6 +1,8 @@
 import webview
 import json
 import time
+import base64
+import subprocess
 from datetime import datetime
 from pathlib import Path
 from threading import Lock
@@ -8,6 +10,7 @@ from helpers.config import get_saved_state,load_config,save_config
 from modules.core_engine import GameEngine
 from modules.game import Game
 from modules.rclone_manager import RcloneManager
+from modules.thumbnail_manager import ThumbnailManager
 
 class GGitBridgeApi:
     def __init__(self):
@@ -20,6 +23,7 @@ class GGitBridgeApi:
         self._status_cache_ttl_seconds = 1800.0
 
         self.rclone_manager = RcloneManager()
+        self.thumbnail_manager = ThumbnailManager()
         self.config = load_config()
         self.saved_state = get_saved_state(self.config)
         self.games = [self._game_from_data(item) for item in self.saved_state["games"]]
@@ -67,6 +71,7 @@ class GGitBridgeApi:
         save_path = data.get("save_path","")
         game.exe_path = Path(exe_path) if exe_path else None
         game.save_path = Path(save_path) if save_path else None
+        game.thumbnail_path = data.get("thumbnail_path", "")
         return game
 
     def _get_window(self):
@@ -76,11 +81,31 @@ class GGitBridgeApi:
     
     # api methods callable form JS
 
+    def _get_thumbnail_url(self, thumbnail_path):
+        if not thumbnail_path:
+            return ""
+
+        p = Path(thumbnail_path)
+        # If the path is relative, resolve it against the project root
+        if not p.is_absolute():
+            p = (self.thumbnail_manager.project_root / p).resolve()
+
+        if p.exists():
+            try:
+                with open(p, "rb") as f:
+                    encoded_string = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:image/jpeg;base64,{encoded_string}"
+            except Exception as exc:
+                self._append_log("ERROR", "bridge", f"Failed to encode thumbnail: {exc}")
+
+        return ""
+
     def _build_library_item(self, game, status="Unknown"):
         return {
             "name": game.name,
             "exe": str(game.exe_path) if game.exe_path else "",
             "save": str(game.save_path) if game.save_path else "",
+            "thumbnail": self._get_thumbnail_url(game.thumbnail_path),
             "status": status,
         }
 
@@ -154,8 +179,12 @@ class GGitBridgeApi:
                     status = "Local Newer"
                     self._append_log("INFO", "status", f"{game.name}: {status}")
                     return status
-                if remote_latest > local_latest:
+                elif remote_latest > local_latest:
                     status = "Remote Newer"
+                    self._append_log("INFO", "status", f"{game.name}: {status}")
+                    return status
+                else:
+                    status = "Synced"
                     self._append_log("INFO", "status", f"{game.name}: {status}")
                     return status
 
@@ -330,6 +359,9 @@ class GGitBridgeApi:
             active_name = new_game.name
             action_text = "Added"
 
+        # Fetch/Update thumbnail
+        new_game.thumbnail_path = self.thumbnail_manager.get_thumbnail(new_game.name)
+
         save_config(self.games, active_name, self.rclone_manager)
         self._invalidate_status_cache("library changed")
         self._append_log("INFO", "library", f"{action_text} game: {active_name}")
@@ -337,6 +369,98 @@ class GGitBridgeApi:
             "status": "success",
             "message": f"{active_name} {action_text.lower()} in library.",
         }
+    
+    def remove_game(self, name):
+        game_name = (name or "").strip()
+        if not game_name:
+            return {
+                "status": "error",
+                "message": "Game name is required.",
+            }
+
+        removed_game = None
+        for i, game in enumerate(self.games):
+            if game.name == game_name:
+                removed_game = self.games.pop(i)
+                break
+
+        if not removed_game:
+            return {
+                "status": "error",
+                "message": f"Game '{game_name}' not found in library.",
+            }
+
+        if self.active_game_name == removed_game.name:
+            self.active_game_name = self.games[0].name if self.games else ""
+
+        save_config(self.games, self.active_game_name, self.rclone_manager)
+        self._invalidate_status_cache("library changed")
+        self._append_log("INFO", "library", f"Removed game: {removed_game.name}")
+
+        return {
+            "status": "success",
+            "message": f"{removed_game.name} removed from library.",
+        }
+
+    def remove_remote_saves(self, name):
+        game_name = (name or "").strip()
+        if not game_name:
+            return {
+                "status": "error",
+                "message": "Game name is required.",
+            }
+
+        if not self.rclone_manager.rclone_exe:
+            return {
+                "status": "error",
+                "message": "Rclone executable not found.",
+            }
+
+        if not self.rclone_manager.remote_name:
+            return {
+                "status": "error",
+                "message": "Remote is not configured.",
+            }
+
+        remote_path = f"{self.rclone_manager.remote_name}:GGit/Saves/{game_name}"
+
+        try:
+            listing = self.rclone_manager.run_rclone(
+                "lsf",
+                remote_path,
+                "--files-only",
+                "-R",
+                capture_output=True,
+            )
+
+            if listing.returncode != 0 or not (listing.stdout or "").strip():
+                self._append_log("INFO", "library", f"No remote saves found for: {game_name}")
+                return {
+                    "status": "success",
+                    "message": f"No remote saves found for {game_name}.",
+                }
+
+            self.rclone_manager.run_rclone("purge", remote_path, check=True, capture_output=True)
+            self._invalidate_status_cache("remote saves removed")
+            self._append_log("INFO", "library", f"Removed remote saves for: {game_name}")
+            return {
+                "status": "success",
+                "message": f"Remote saves removed for {game_name}.",
+            }
+        except subprocess.CalledProcessError:
+            self._append_log("ERROR", "library", f"Failed to remove remote saves for: {game_name}")
+            return {
+                "status": "error",
+                "message": f"Failed to remove remote saves for {game_name}.",
+            }
+        except Exception as exc:
+            self._append_log("ERROR", "library", f"Remote save removal failed for {game_name}: {exc}")
+            return {
+                "status": "error",
+                "message": "Unexpected error while removing remote saves.",
+            }
+            
+   
     def check_mega_status(self):
         try:
             if not self.rclone_manager.rclone_exe:
@@ -392,3 +516,5 @@ class GGitBridgeApi:
         except Exception as exc:
             self._append_log("ERROR", "mega", f"Failed to delete MEGA remote: {exc}")
             return {"status": "error", "message": "Failed to logout from MEGA."}
+
+

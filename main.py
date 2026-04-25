@@ -136,6 +136,7 @@
 #             break
 #         else:
 #             print("Invalid choice. Please select 1-6.")
+from pathlib import Path
 from launcher.bridge import GGitBridgeApi
 import webview
 
@@ -143,15 +144,25 @@ import webview
 def start_app():
     api = GGitBridgeApi()
 
+    # Path to the built static files
+    base_dir = Path(__file__).resolve().parent
+    dist_index = base_dir / "launcher" / "GGit_launcher" / "dist" / "index.html"
+
+    if not dist_index.exists():
+        print(f"Warning: Build not found at {dist_index}")
+        print("Falling back to dev server...")
+        url = "http://localhost:5173/"
+    else:
+        url = str(dist_index)
+
     window = webview.create_window(
         "GGit Launcher",
-        url="http://localhost:5173/",
+        url=url,
         js_api=api,
         width=1000,
         height=700
     )
-    webview.start(debug=True)
-
+    webview.start(debug=False)
 
 
 if __name__ == "__main__":

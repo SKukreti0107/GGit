@@ -41,20 +41,22 @@ class RcloneManager:
 
         print("Rclone not found.")
 
-        if not sys.stdin.isatty():
-            print("Skipping auto-install because stdin is not interactive.")
-            print("Install Rclone from https://rclone.org/downloads/ or place rclone.exe in the project root.")
+        if sys.stdin is None or not sys.stdin.isatty():
+            if self.rclone_exe:
+                return True
             return False
 
-        choice = input("Install rclone now in the project root? [Y/n]: ").strip().lower()
-        if choice in ("", "y", "yes"):
-            if self.download_and_install_rclone():
-                self.rclone_exe = self.get_rclone_executable_path()
-                if self.rclone_exe:
-                    print(f"Rclone installed at: {self.rclone_exe}")
-                    return True
+        try:
+            choice = input("Install rclone now in the project root? [Y/n]: ").strip().lower()
+            if choice in ("", "y", "yes"):
+                if self.download_and_install_rclone():
+                    self.rclone_exe = self.get_rclone_executable_path()
+                    if self.rclone_exe:
+                        print(f"Rclone installed at: {self.rclone_exe}")
+                        return True
+        except (EOFError, IOError):
+            pass
 
-        print("Install skipped. Rclone commands will be unavailable until rclone is installed.")
         return False
 
     def download_and_install_rclone(self):
@@ -88,7 +90,7 @@ class RcloneManager:
             raise FileNotFoundError("Rclone executable was not found.")
 
         command = [str(self.rclone_exe), *args]
-        return subprocess.run(command, capture_output=capture_output, text=text, check=check)
+        return subprocess.run(command, capture_output=capture_output, text=text, check=check, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
     def setup_mega_remote(self):
         """Guides the user through setting up a MEGA remote for GGit."""

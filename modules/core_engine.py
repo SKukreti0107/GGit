@@ -23,7 +23,7 @@ class GameEngine:
             raise FileNotFoundError("Rclone executable was not found.")
 
         command = [str(self.rclone.rclone_exe), *args]
-        return subprocess.run(command, check=check, capture_output=capture_output, text=text)
+        return subprocess.run(command, check=check, capture_output=capture_output, text=text, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
     def has_remote_files(self):
         try:
@@ -66,11 +66,17 @@ class GameEngine:
         for item in raw_items:
             if item.get("IsDir"):
                 continue
+            # Cloud remotes (like MEGA) and local filesystems often support different hash types.
+            # We normalize by picking the best available common hash (SHA-1 or MD5) to ensure
+            # the manifest remains consistent across different storage backends.
+            h = item.get("Hashes", {})
+            file_hash = h.get("SHA-1") or h.get("MD5") or next(iter(h.values()), "")
+
             normalized.append(
                 {
                     "Path": item.get("Path", ""),
                     "Size": item.get("Size", 0),
-                    "Hashes": item.get("Hashes", {}),
+                    "Hash": file_hash,
                 }
             )
 
@@ -104,6 +110,7 @@ class GameEngine:
             ["tasklist", "/FO", "CSV", "/NH", "/FI", f"IMAGENAME eq {image_name}"],
             capture_output=True,
             text=True,
+            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
         )
         if result.returncode != 0 or not result.stdout.strip():
             return set()

@@ -14,9 +14,10 @@ export default function GameCard({ game, onOpen }) {
             onClick={handleOpen}
             type="button"
         >
-            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative"
-                data-alt="neon lit futuristic cyberpunk city street scene with wet pavement at night"
-                style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBplIVzU7CWPvhCveIxnpD6oiMjkEVwezjipveWiU9gSNvjcZs_yYyfj-DBXYes-XORT5aUykozCgONVJ0qbOARYqO93vuvViIhmOBM8gcAHB4L-qEle6WglDWFqa7GxLskNL01d4IjTz7JynGQDYPsRj8vJIFUlVNBGAr4nMUkoWbCqhUA59wySkA89QvCjGVmEedZFri5vLUcZ4WvAKL36kM49CamKEJPGZCxgO6if2gnLfhNCiXUmyzzyAYrz4v1QmC7iRLoZz8")' }}
+            <div className="w-full h-40 bg-center bg-no-repeat bg-cover border-b border-surface-border relative bg-surface-light"
+                style={{ 
+                    backgroundImage: `url("${game?.thumbnail || "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=500&auto=format&fit=crop"}")` 
+                }}
             >
                 <div className="absolute inset-0 bg-gradient-to-t from-background-dark/80 to-transparent"></div>
             </div>

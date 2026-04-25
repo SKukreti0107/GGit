@@ -51,6 +51,25 @@
 *  **Distribution:** Go compiles into a single, tiny `.exe`, making it much easier to share than bulky Python bundles.
 *  **UI:** The final version will likely use **Wails**, allowing for a modern React/Vue frontend with a high-performance Go backend.
 
+### **Building and Packaging**
+
+#### **1. Generate the Build Folder**
+To bundle the Python code and dependencies into a folder, run the automated build script:
+```powershell
+./build_installer.ps1
+```
+This script cleans up old artifacts and runs PyInstaller to create the `dist/GGit_Launcher` directory.
+
+#### **2. Create the Final Setup Installer**
+To generate the single-file `GGit_Setup.exe`:
+1.  Open `installer_script.iss` in **Inno Setup**.
+2.  Press **F9** (or click **Compile**).
+3.  The installer will be saved in `dist/installer/GGit_Setup.exe`.
+
+The installer automatically handles WebView2 checks, shortcut creation, and bundling `rclone.exe`.
+
+---
+
 ### **Local and remote file as same already**
 ![Case 1 : Local and remote file as same already](image.png)
 
