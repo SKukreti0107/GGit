@@ -1,5 +1,6 @@
 import webview
 import json
+import time
 from datetime import datetime
 from pathlib import Path
 from threading import Lock
@@ -14,6 +15,9 @@ class GGitBridgeApi:
         self._logs = []
         self._log_seq = 0
         self._max_logs = 500
+        self._status_cache_items = []
+        self._status_cache_at = 0.0
+        self._status_cache_ttl_seconds = 1800.0
 
         self.rclone_manager = RcloneManager()
         self.config = load_config()
@@ -26,6 +30,18 @@ class GGitBridgeApi:
         self.active_game_name = self.saved_state["active_game_name"]
 
         self._append_log("INFO", "bridge", f"Bridge ready with {len(self.games)} configured game(s).")
+
+    def _invalidate_status_cache(self, reason=None):
+        had_cache = bool(self._status_cache_items)
+        self._status_cache_items = []
+        self._status_cache_at = 0.0
+        if had_cache and reason:
+            self._append_log("INFO", "status", f"Status cache invalidated: {reason}")
+
+    def _is_status_cache_fresh(self, max_age_seconds):
+        if not self._status_cache_items or self._status_cache_at <= 0:
+            return False
+        return (time.monotonic() - self._status_cache_at) < max_age_seconds
 
     def _append_log(self, level, source, message):
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -175,13 +191,29 @@ class GGitBridgeApi:
     def get_library(self):
         return [self._build_library_item(g, "Unknown") for g in self.games]
 
-    def get_library_with_status(self):
+    def get_library_with_status(self, force_refresh=False, max_age_seconds=None):
         # Sequentially checks each game to support the launcher workflow.
+        if isinstance(force_refresh, str):
+            force_refresh = force_refresh.strip().lower() in {"1", "true", "yes", "y"}
+        else:
+            force_refresh = bool(force_refresh)
+
+        try:
+            max_age = float(max_age_seconds) if max_age_seconds is not None else self._status_cache_ttl_seconds
+        except (TypeError, ValueError):
+            max_age = self._status_cache_ttl_seconds
+        max_age = max(1.0, min(max_age, 300.0))
+
+        if not force_refresh and self._is_status_cache_fresh(max_age):
+            return [dict(item) for item in self._status_cache_items]
+
         self._append_log("INFO", "status", f"Refreshing status for {len(self.games)} game(s)...")
         library = []
         for game in self.games:
             status = self._get_game_status(game)
             library.append(self._build_library_item(game, status))
+        self._status_cache_items = [dict(item) for item in library]
+        self._status_cache_at = time.monotonic()
         self._append_log("INFO", "status", "Status refresh complete.")
         return library
 
@@ -246,6 +278,7 @@ class GGitBridgeApi:
         engine.start()
 
         save_config(self.games,selected_game.name,self.rclone_manager)
+        self._invalidate_status_cache("launch workflow completed")
         self._append_log("INFO", "launch", f"Launch workflow complete for {game_name}.")
 
         return {
@@ -298,6 +331,7 @@ class GGitBridgeApi:
             action_text = "Added"
 
         save_config(self.games, active_name, self.rclone_manager)
+        self._invalidate_status_cache("library changed")
         self._append_log("INFO", "library", f"{action_text} game: {active_name}")
         return {
             "status": "success",

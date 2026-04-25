@@ -10,6 +10,7 @@ export default function CardGrid({ refreshKey = 0, onOpenGame }) {
         let isMounted = true;
         setLoading(true);
         setError("");
+        const forceRefresh = refreshKey > 0;
 
         const getLibrary = async () => {
             try {
@@ -21,11 +22,9 @@ export default function CardGrid({ refreshKey = 0, onOpenGame }) {
                     return;
                 }
 
-                const fetchLibrary = typeof api.get_library_with_status === "function"
-                    ? api.get_library_with_status.bind(api)
-                    : api.get_library.bind(api);
-
-                const res = await fetchLibrary();
+                const res = typeof api.get_library_with_status === "function"
+                    ? await api.get_library_with_status(forceRefresh)
+                    : await api.get_library();
                 if (isMounted) {
                     setGames(Array.isArray(res) ? res : []);
                 }

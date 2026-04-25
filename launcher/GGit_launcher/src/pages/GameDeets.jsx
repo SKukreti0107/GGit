@@ -16,13 +16,13 @@ export default function GameDeets({ game, onBack, onGameUpdate }) {
         setSelectedGame(game || null);
     }, [game]);
 
-    const updateGameFromLibrary = async () => {
+    const updateGameFromLibrary = async (forceRefresh = false) => {
         const api = window.pywebview?.api;
         if (typeof api?.get_library_with_status !== "function" || !selectedGame?.name) {
             return;
         }
 
-        const library = await api.get_library_with_status();
+        const library = await api.get_library_with_status(forceRefresh);
         const match = Array.isArray(library)
             ? library.find((entry) => entry.name === selectedGame.name)
             : null;
@@ -39,7 +39,7 @@ export default function GameDeets({ game, onBack, onGameUpdate }) {
         setIsRefreshing(true);
         setRefreshError("");
         try {
-            await updateGameFromLibrary();
+            await updateGameFromLibrary(true);
         } catch (err) {
             setRefreshError("Failed to refresh status from backend.");
         } finally {
@@ -65,7 +65,7 @@ export default function GameDeets({ game, onBack, onGameUpdate }) {
             }
 
             setLaunchMessage(result?.message || "Launch started.");
-            await updateGameFromLibrary();
+            await updateGameFromLibrary(true);
         } catch (err) {
             setLaunchError("Failed to trigger launch via bridge.");
         } finally {
