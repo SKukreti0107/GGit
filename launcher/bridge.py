@@ -337,7 +337,38 @@ class GGitBridgeApi:
             "status": "success",
             "message": f"{active_name} {action_text.lower()} in library.",
         }
-    
-    
+    def check_mega_status(self):
+        try:
+            if not self.rclone_manager.rclone_exe:
+                return {"status": "error", "message": "Rclone executable not found.", "is_connected": False}
+            result = self.rclone_manager.run_rclone("listremotes", capture_output=True)
+            is_connected = f"{self.rclone_manager.remote_name}:" in result.stdout
+            return {"status": "success", "is_connected": is_connected}
+        except Exception as exc:
+            return {"status": "error", "message": str(exc), "is_connected": False}
 
-
+    def setup_mega(self, user_email, user_pass):
+        self._append_log("INFO", "mega", "Setting up MEGA remote...")
+        if not self.rclone_manager.rclone_exe:
+            return {"status": "error", "message": "Rclone executable not found."}
+        
+        try:
+            self.rclone_manager.run_rclone(
+                "config",
+                "create",
+                self.rclone_manager.remote_name,
+                "mega",
+                "user",
+                user_email,
+                "pass",
+                user_pass,
+                check=True,
+            )
+            self.config["remote_name"] = self.rclone_manager.remote_name
+            save_config(self.games, self.active_game_name, self.rclone_manager)
+            self._invalidate_status_cache("mega remote configured")
+            self._append_log("INFO", "mega", f"Successfully linked to MEGA as '{self.rclone_manager.remote_name}'")
+            return {"status": "success", "message": "MEGA connected successfully."}
+        except Exception as exc:
+            self._append_log("ERROR", "mega", f"Failed to create MEGA remote: {exc}")
+            return {"status": "error", "message": "Failed to connect to MEGA. Please check your credentials."}
