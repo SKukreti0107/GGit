@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #f04f33;
+  --color-background-light: #f8f6f6;
+  --color-background-dark: #090D14;
+  --color-surface: rgba(20, 26, 37, 0.73);
+  --color-surface-border: #1E293B;
+  --color-text-main: #E2E8F0;
+  --color-muted: #64748B;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body: Inter, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-default: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  --shadow-glow-primary: 0 0 30px rgba(240, 79, 51, 0.15);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-main);
+    font-family: var(--font-body);
+  }
+}
+
+@layer components {
+  .glass-header {
+    background-color: var(--color-surface);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-bottom: 1px solid var(--color-surface-border);
+  }
+
+  .game-card {
+    background-color: var(--color-surface);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid var(--color-surface-border);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .game-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-glow-primary);
+    transform: translateY(-2px);
+  }
+
+  .terminal-dock {
+    background-color: #000000;
+    border-top: 1px solid var(--color-surface-border);
+  }
+
+  .sync-progress {
+    background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+    background-size: 200% 100%;
+    animation: progressLine 1.5s infinite linear;
+  }
+}
+
+@keyframes progressLine {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}

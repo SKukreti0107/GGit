@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Home from './pages/home'
 import GameDeets from './pages/GameDeets'
+import MegaDeetsLogin from './pages/MegaDeetsLogin'
 import './App.css'
 
 function App() {
